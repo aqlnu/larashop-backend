@@ -1,18 +1,21 @@
 FROM php:8.2-apache
 
-# Install ekstensi yang dibutuhkan Laravel & PostgreSQL
+# Install dependensi
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql
 
-# Aktifkan mod_rewrite untuk routing Laravel
+# FIX: Matikan semua MPM dan aktifkan prefork saja
+RUN a2dismod mpm_event mpm_worker mpm_prefork && a2enmod mpm_prefork
+
+# Aktifkan rewrite
 RUN a2enmod rewrite
 
-# Salin konfigurasi Apache
+# Salin source code
 COPY . /var/www/html
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Ubah document root ke folder public
+# Sesuaikan document root
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 WORKDIR /var/www/html
