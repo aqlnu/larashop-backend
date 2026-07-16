@@ -1,4 +1,3 @@
-# Gunakan image PHP 8.2 dengan Apache
 FROM php:8.2-apache
 
 # 1. Install dependensi sistem yang dibutuhkan Laravel & PostgreSQL
@@ -9,7 +8,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && docker-php-ext-install pdo pdo_pgsql zip
 
-# 2. FIX: Pastikan hanya satu MPM yang aktif untuk mencegah error AH00534
+# 2. FIX: Matikan paksa semua MPM dan aktifkan prefork saja
+# Ini adalah langkah kunci untuk menghilangkan error AH00534
 RUN a2dismod mpm_event mpm_worker mpm_prefork && a2enmod mpm_prefork
 
 # 3. Aktifkan mod_rewrite untuk routing Laravel
@@ -18,7 +18,7 @@ RUN a2enmod rewrite
 # 4. Salin semua file dari folder backend ke dalam container
 COPY . /var/www/html
 
-# 5. Sesuaikan DocumentRoot agar mengarah ke folder 'public'
+# 5. Sesuaikan DocumentRoot agar mengarah ke folder 'public' milik Laravel
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 # 6. Ubah konfigurasi port agar dinamis mengikuti port Railway
